@@ -29,7 +29,7 @@ class HomeScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.greenAccent.withOpacity(0.1), Colors.black],
+            colors: [Colors.greenAccent.withValues(alpha: 0.1), Colors.black],
             stops: const [0.0, 0.3],
           ),
         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../models/comment_model.dart';
+import '../models/news_model.dart';
 
 class CommentedNewsScreen extends StatefulWidget {
   const CommentedNewsScreen({super.key});
@@ -12,9 +14,8 @@ class CommentedNewsScreen extends StatefulWidget {
 class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
   final _supabase = Supabase.instance.client;
 
-  // MỚI: Dùng Map để nhóm bài báo và danh sách bình luận của bạn
-  // Cấu trúc: { "url_bai_bao": { "news": Map, "my_comments": List } }
-  Map<String, dynamic> _commentedData = {};
+  // Cấu trúc: { "article_url": { "news": NewsModel, "comments": List<CommentModel> } }
+  Map<String, Map<String, dynamic>> _groupedData = {};
   bool _isLoading = true;
 
   @override
@@ -25,71 +26,74 @@ class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
 
   Future<void> _fetchMyActivity() async {
     final user = _supabase.auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
     try {
-      // 1. Lấy tất cả bình luận của TÔI
-      final myComments = await _supabase
+      // 1. Lấy tất cả bình luận của user hiện tại
+      final rawComments = await _supabase
           .from('comments')
           .select()
           .eq('user_id', user.id)
           .order('created_at', ascending: false);
 
-      if (myComments.isEmpty) {
+      if (rawComments.isEmpty) {
         setState(() => _isLoading = false);
         return;
       }
 
+      final myComments =
+          rawComments.map((json) => CommentModel.fromJson(json)).toList();
+
       // 2. Lấy danh sách URL duy nhất
-      final List<String> urls = myComments
-          .map((c) => c['article_url'] as String)
-          .toSet()
-          .toList();
+      final urls =
+          myComments.map((c) => c.articleUrl).toSet().toList();
 
       // 3. Lấy thông tin bài báo tương ứng
-      final newsData = await _supabase
-          .from('news')
-          .select()
-          .inFilter('article_url', urls);
+      final rawNews =
+          await _supabase.from('news').select().inFilter('article_url', urls);
 
-      // 4. NHÓM DỮ LIỆU
-      Map<String, dynamic> grouped = {};
-      for (var url in urls) {
-        // Tìm bài báo
-        final article = newsData.firstWhere(
-          (n) => n['article_url'] == url,
-          orElse: () => {},
-        );
-        // Lọc các bình luận của mình cho bài này
-        final commentsForThisArticle = myComments
-            .where((c) => c['article_url'] == url)
-            .toList();
+      final newsList =
+          rawNews.map((json) => NewsModel.fromJson(json)).toList();
 
-        if (article.isNotEmpty) {
-          grouped[url] = {'news': article, 'comments': commentsForThisArticle};
+      // 4. Nhóm dữ liệu theo articleUrl
+      final Map<String, Map<String, dynamic>> grouped = {};
+      for (final url in urls) {
+        final article = newsList.where((n) => n.articleUrl == url).firstOrNull;
+        final commentsForArticle =
+            myComments.where((c) => c.articleUrl == url).toList();
+
+        if (article != null) {
+          grouped[url] = {'news': article, 'comments': commentsForArticle};
         }
       }
 
-      setState(() {
-        _commentedData = grouped;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _groupedData = grouped;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      debugPrint('Lỗi: $e');
-      setState(() => _isLoading = false);
+      debugPrint('Lỗi tải nhật ký bình luận: $e');
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   String _formatTime(String timestamp) {
     final DateTime dateTime = DateTime.parse(timestamp).toLocal();
     final Duration difference = DateTime.now().difference(dateTime);
-    if (difference.inHours > 24) return '${dateTime.day}/${dateTime.month}';
+    if (difference.inHours > 24) {
+      return '${dateTime.day}/${dateTime.month}';
+    }
     return '${difference.inHours} giờ trước';
   }
 
   @override
   Widget build(BuildContext context) {
-    final urls = _commentedData.keys.toList();
+    final urls = _groupedData.keys.toList();
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -117,9 +121,9 @@ class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
               padding: const EdgeInsets.all(12),
               itemCount: urls.length,
               itemBuilder: (context, index) {
-                final data = _commentedData[urls[index]];
-                final news = data['news'];
-                final List myComments = data['comments'];
+                final data = _groupedData[urls[index]]!;
+                final NewsModel news = data['news'];
+                final List<CommentModel> comments = data['comments'];
 
                 return Card(
                   color: Colors.grey[900],
@@ -131,25 +135,27 @@ class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Phần 1: Thông tin bài báo (Thu nhỏ lại)
+                      // Thông tin bài báo
                       ListTile(
                         onTap: () async {
-                          final Uri url = Uri.parse(news['article_url']);
-                          if (await canLaunchUrl(url))
-                            launchUrl(url, mode: LaunchMode.inAppWebView);
+                          final uri = Uri.parse(news.articleUrl);
+                          if (await canLaunchUrl(uri)) {
+                            launchUrl(uri, mode: LaunchMode.inAppWebView);
+                          }
                         },
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            news['image_url'] ?? '',
+                            news.imageUrl,
                             width: 60,
                             height: 60,
                             fit: BoxFit.cover,
-                            errorBuilder: (c, e, s) => const Icon(Icons.image),
+                            errorBuilder: (_, _, _) =>
+                                const Icon(Icons.image),
                           ),
                         ),
                         title: Text(
-                          news['title'],
+                          news.title,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 14,
@@ -159,7 +165,7 @@ class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
-                          _formatTime(news['published_at']),
+                          _formatTime(news.publishedAt),
                           style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 11,
@@ -174,11 +180,11 @@ class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
 
                       const Divider(color: Colors.white10, height: 1),
 
-                      // Phần 2: DANH SÁCH BÌNH LUẬN CỦA BẠN
+                      // Danh sách bình luận của user
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
-                        color: Colors.white.withOpacity(0.03),
+                        color: Colors.white.withValues(alpha: 0.03),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -191,49 +197,46 @@ class _CommentedNewsScreenState extends State<CommentedNewsScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            ...myComments
-                                .map(
-                                  (comment) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 8.0),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Icon(
-                                          Icons.subdirectory_arrow_right,
-                                          color: Colors.greenAccent,
-                                          size: 14,
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                comment['content'],
-                                                style: const TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              Text(
-                                                _formatTime(
-                                                  comment['created_at'],
-                                                ),
-                                                style: const TextStyle(
-                                                  color: Colors.white38,
-                                                  fontSize: 10,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                            ...comments.map(
+                              (comment) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Icon(
+                                      Icons.subdirectory_arrow_right,
+                                      color: Colors.greenAccent,
+                                      size: 14,
                                     ),
-                                  ),
-                                )
-                                .toList(),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            comment.content,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          Text(
+                                            _formatTime(
+                                              comment.createdAt.toIso8601String(),
+                                            ),
+                                            style: const TextStyle(
+                                              color: Colors.white38,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),

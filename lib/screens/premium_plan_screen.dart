@@ -191,7 +191,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                   boxShadow: isSuper
                       ? [
                           BoxShadow(
-                            color: Colors.orange.withOpacity(0.4),
+                            color: Colors.orange.withValues(alpha: 0.4),
                             blurRadius: 10,
                             spreadRadius: 2,
                           ),
@@ -273,7 +273,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
           // Màn chắn Loading khi đang xử lý thanh toán
           if (_isProcessing)
             Container(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               child: const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

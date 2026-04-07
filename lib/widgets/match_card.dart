@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../core/constants.dart';
 import '../models/match_model.dart';
 import '../screens/live_player_screen.dart';
 
@@ -7,38 +8,12 @@ class MatchCard extends StatelessWidget {
   final MatchModel match;
 
   const MatchCard({super.key, required this.match});
-  String _getLeagueName(String code) {
-    switch (code) {
-      case 'PL':
-        return 'Ngoại hạng Anh (Premier League)';
-      case 'PD':
-        return 'Tây Ban Nha (La Liga)';
-      case 'SA':
-        return 'Italia (Serie A)';
-      case 'BL1':
-        return 'Đức (Bundesliga)';
-      case 'FL1':
-        return 'Pháp (Ligue 1)';
-      case 'BSA':
-        return 'VĐQG Brazil (Série A)';
-      case 'CL':
-        return 'UEFA Champions League';
-      case 'EL':
-        return 'UEFA Europa League';
-      case 'WC':
-        return 'FIFA World Cup';
-      default:
-        return code.isNotEmpty ? code : 'Giao hữu';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    // Chuyển đổi giờ UTC sang giờ Việt Nam
     final localTime = match.startedAt.toLocal();
     final timeString = DateFormat('HH:mm - dd/MM').format(localTime);
 
-    // Kiểm tra xem trận đấu đang đá hay đã xong để tô màu
     final isLive = match.status == 'IN_PLAY' || match.status == 'PAUSED';
     final statusColor = isLive ? Colors.greenAccent : Colors.grey;
 
@@ -47,14 +22,10 @@ class MatchCard extends StatelessWidget {
       elevation: 4,
       shadowColor: Colors.black45,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: const Color(0xFF1E1E1E), // Màu xám đen sang trọng
-      // BƯỚC 1: Bọc nội dung bằng InkWell để bắt sự kiện click và tạo hiệu ứng gợn sóng
+      color: const Color(0xFF1E1E1E),
       child: InkWell(
-        borderRadius: BorderRadius.circular(
-          20,
-        ), // Bo góc hiệu ứng gợn sóng khớp với thẻ
+        borderRadius: BorderRadius.circular(20),
         onTap: () {
-          // BƯỚC 2: Chuyển hướng sang màn hình LivePlayerScreen và truyền dữ liệu trận đấu
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -62,12 +33,11 @@ class MatchCard extends StatelessWidget {
             ),
           );
         },
-        // BƯỚC 3: Đẩy khối Padding cũ của bạn vào làm child của InkWell
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              // Dòng trên cùng: Trạng thái và Thời gian
+              // Dòng trên: Trạng thái và Thời gian + Tên giải
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -77,7 +47,7 @@ class MatchCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.2),
+                      color: statusColor.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: statusColor, width: 1),
                     ),
@@ -90,20 +60,21 @@ class MatchCard extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // Dùng AppConstants thay vì hàm nội bộ
                   Text(
-                    '${_getLeagueName(match.leagueCode)} • $timeString',
+                    '${AppConstants.getLeagueName(match.leagueCode)} • $timeString',
                     style: const TextStyle(color: Colors.white54, fontSize: 13),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
 
-              // Dòng giữa: Tên hai đội, Logo và Tỉ số
+              // Dòng giữa: Đội nhà — Tỉ số — Đội khách
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // ĐỘI NHÀ (Logo nằm trên tên)
+                  // Đội nhà
                   Expanded(
                     child: Column(
                       children: [
@@ -111,12 +82,11 @@ class MatchCard extends StatelessWidget {
                           match.homeLogo,
                           height: 50,
                           width: 50,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.shield,
-                                color: Colors.white54,
-                                size: 50,
-                              ),
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.shield,
+                            color: Colors.white54,
+                            size: 50,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -132,7 +102,7 @@ class MatchCard extends StatelessWidget {
                     ),
                   ),
 
-                  // TỈ SỐ Ở GIỮA
+                  // Tỉ số
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: Text(
@@ -145,7 +115,7 @@ class MatchCard extends StatelessWidget {
                     ),
                   ),
 
-                  // ĐỘI KHÁCH (Logo nằm trên tên)
+                  // Đội khách
                   Expanded(
                     child: Column(
                       children: [
@@ -153,12 +123,11 @@ class MatchCard extends StatelessWidget {
                           match.awayLogo,
                           height: 50,
                           width: 50,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.shield,
-                                color: Colors.white54,
-                                size: 50,
-                              ),
+                          errorBuilder: (_, _, _) => const Icon(
+                            Icons.shield,
+                            color: Colors.white54,
+                            size: 50,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(

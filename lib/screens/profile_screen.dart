@@ -1,10 +1,107 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'commented_news_screen.dart';
-import 'premium_plan_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../core/constants.dart';
+import '../models/team_model.dart';
+import '../repositories/team_repository.dart';
 
+/// Bottom sheet để chọn đội bóng yêu thích, nhận callback khi chọn xong
+class TeamSelectionSheet extends StatefulWidget {
+  final void Function(TeamModel team) onTeamSelected;
+
+  const TeamSelectionSheet({super.key, required this.onTeamSelected});
+
+  @override
+  State<TeamSelectionSheet> createState() => _TeamSelectionSheetState();
+}
+
+class _TeamSelectionSheetState extends State<TeamSelectionSheet> {
+  final _teamRepo = TeamRepository();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text(
+            'Chọn đội bóng ruột của bạn',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        const Divider(color: Colors.white24),
+        Expanded(
+          child: FutureBuilder<List<TeamModel>>(
+            future: _teamRepo.getUniqueTeams(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.greenAccent),
+                );
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(
+                    'Lỗi tải dữ liệu: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                );
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Chưa có dữ liệu Bảng xếp hạng',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                );
+              }
+
+              // Đã sort A-Z từ repository
+              final teams = snapshot.data!;
+
+              return ListView.builder(
+                itemCount: teams.length,
+                itemBuilder: (context, index) {
+                  final team = teams[index];
+                  return ListTile(
+                    leading: team.teamLogo.isNotEmpty
+                        ? Image.network(
+                            team.teamLogo,
+                            width: 35,
+                            height: 35,
+                            errorBuilder: (_, _, _) => const Icon(
+                              Icons.sports_soccer,
+                              color: Colors.greenAccent,
+                            ),
+                          )
+                        : const Icon(
+                            Icons.sports_soccer,
+                            color: Colors.greenAccent,
+                          ),
+                    title: Text(
+                      team.teamName,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      widget.onTeamSelected(team);
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Profile screen — chỉ chứa UI và điều phối logic qua Supabase auth
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -15,69 +112,51 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _supabase = Supabase.instance.client;
 
-  // Hàm xử lý Đăng xuất 2 lớp
   Future<void> _signOut() async {
     try {
       final googleSignIn = GoogleSignIn(
-        serverClientId:
-            '485933277797-j5bgvt32ia25gt8d9ucv6f173b8tc3lb.apps.googleusercontent.com',
+        serverClientId: AppConstants.googleServerClientId,
       );
-
       if (await googleSignIn.isSignedIn()) {
         await googleSignIn.disconnect();
       }
       await _supabase.auth.signOut();
-
       if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-          (route) => false,
-        );
+        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
       }
     } catch (e) {
       debugPrint('Lỗi đăng xuất: $e');
     }
   }
 
-  // ==========================================
-  // HÀM 1: CẬP NHẬT ĐỘI BÓNG YÊU THÍCH (LƯU ID KIỂU INT)
-  // ==========================================
-  Future<void> _updateFavoriteTeam(
-    int teamId,
-    String teamName,
-    String teamLogo,
-  ) async {
+  Future<void> _updateFavoriteTeam(TeamModel team) async {
     try {
       await _supabase.auth.updateUser(
         UserAttributes(
           data: {
-            'favorite_team_id': teamId, // Lưu ID dưới dạng số nguyên (int4)
-            'favorite_team': teamName, // Lưu tên để hiển thị nhanh
-            'favorite_team_logo': teamLogo, // Lưu logo để vẽ UI ngay lập tức
+            'favorite_team_id': team.teamId,
+            'favorite_team': team.teamName,
+            'favorite_team_logo': team.teamLogo,
           },
         ),
       );
-
       if (mounted) {
-        setState(() {}); // Ép tải lại màn hình Profile để cập nhật giao diện
+        setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('🎉 Đã thiết lập $teamName làm đội bóng yêu thích!'),
+            content: Text('🎉 Đã thiết lập ${team.teamName} làm đội bóng yêu thích!'),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('❌ Lỗi cập nhật: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ Lỗi cập nhật: $e')),
+        );
       }
     }
   }
 
-  // ==========================================
-  // HÀM 2: HIỂN THỊ DANH SÁCH CHỌN ĐỘI BÓNG (TỪ BẢNG STANDINGS)
-  // ==========================================
   void _showTeamSelection() {
     showModalBottomSheet(
       context: context,
@@ -85,124 +164,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Chọn đội bóng ruột của bạn',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const Divider(color: Colors.white24),
-            Expanded(
-              child: FutureBuilder<List<Map<String, dynamic>>>(
-                // Truy vấn 3 trường cần thiết từ bảng standings
-                future: _supabase
-                    .from('standings')
-                    .select('team_id, team_name, team_logo'),
-                builder: (context, snapshot) {
-                  // Xử lý trạng thái tải
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.greenAccent,
-                      ),
-                    );
-                  }
-                  // Xử lý lỗi kết nối
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Text(
-                        'Lỗi tải dữ liệu: ${snapshot.error}',
-                        style: const TextStyle(color: Colors.redAccent),
-                      ),
-                    );
-                  }
-                  // Xử lý dữ liệu rỗng
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'Chưa có dữ liệu Bảng xếp hạng',
-                        style: TextStyle(color: Colors.white54),
-                      ),
-                    );
-                  }
-
-                  // Lọc đội bóng trùng lặp: Nhóm theo Tên Đội
-                  final Map<String, Map<String, dynamic>> uniqueTeams = {};
-
-                  for (var row in snapshot.data!) {
-                    final int? id = row['team_id'] as int?;
-                    final String? name = row['team_name']?.toString();
-                    final String logo = row['team_logo']?.toString() ?? '';
-
-                    // Chỉ thêm vào danh sách nếu có ID và Tên hợp lệ
-                    if (name != null && name.isNotEmpty && id != null) {
-                      uniqueTeams[name] = {'id': id, 'logo': logo};
-                    }
-                  }
-
-                  // Trích xuất danh sách tên đội và sắp xếp theo thứ tự A-Z
-                  final List<String> teamNamesList = uniqueTeams.keys.toList()
-                    ..sort();
-
-                  // Vẽ danh sách lên màn hình
-                  return ListView.builder(
-                    itemCount: teamNamesList.length,
-                    itemBuilder: (context, index) {
-                      final teamName = teamNamesList[index];
-                      // Ép kiểu chuẩn xác khi lấy dữ liệu từ Map ra
-                      final int teamId = uniqueTeams[teamName]!['id'] as int;
-                      final String teamLogo =
-                          uniqueTeams[teamName]!['logo'] as String;
-
-                      return ListTile(
-                        leading: teamLogo.isNotEmpty
-                            ? Image.network(
-                                teamLogo,
-                                width: 35,
-                                height: 35,
-                                errorBuilder: (c, e, s) => const Icon(
-                                  Icons.sports_soccer,
-                                  color: Colors.greenAccent,
-                                ),
-                              )
-                            : const Icon(
-                                Icons.sports_soccer,
-                                color: Colors.greenAccent,
-                              ),
-                        title: Text(
-                          teamName,
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                        onTap: () async {
-                          Navigator.pop(context); // Đóng bảng chọn
-                          // Kích hoạt hàm lưu với đầy đủ 3 tham số chuẩn xác
-                          await _updateFavoriteTeam(teamId, teamName, teamLogo);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        );
-      },
+      builder: (_) => TeamSelectionSheet(
+        onTeamSelected: _updateFavoriteTeam,
+      ),
     );
   }
 
-  // ==========================================
-  // HÀM 3: TẠO HUY HIỆU VIP DỰA TRÊN GÓI CƯỚC
-  // ==========================================
   Widget _buildVipBadge(Map<String, dynamic>? subscription) {
-    // Nếu chưa mua gói nào -> Hiển thị mác Tiêu chuẩn
     if (subscription == null ||
         subscription.isEmpty ||
         subscription['plan_code'] == null) {
@@ -220,44 +188,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final planCode = subscription['plan_code'];
-    String planName = '';
-    Color planColor = Colors.amber;
+    String planName;
+    Color planColor;
 
-    // Phân loại màu sắc và tên tùy theo gói
     switch (planCode) {
       case 'SUPER_PRO':
         planName = '👑 Super Pro Member';
         planColor = Colors.amber;
-        break;
       case 'NHA_PRO':
         planName = '⭐ NHA Pro Member';
         planColor = Colors.purpleAccent;
-        break;
       case 'LALIGA_PRO':
         planName = '⭐ Laliga Pro Member';
         planColor = Colors.redAccent;
-        break;
       case 'BUNDESLIGA_PRO':
-        planName = '⭐ Budesliga Pro Member';
+        planName = '⭐ Bundesliga Pro Member';
         planColor = Colors.orangeAccent;
-        break;
       case 'SERIA_PRO':
-        planName = '⭐ SeriA Pro Member';
+        planName = '⭐ Serie A Pro Member';
         planColor = Colors.blueAccent;
-        break;
       default:
         return const SizedBox.shrink();
     }
 
-    // Vẽ cái khung VIP phát sáng
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: planColor.withOpacity(0.15),
+        color: planColor.withValues(alpha: 0.15),
         border: Border.all(color: planColor, width: 1.5),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: planColor.withOpacity(0.3), blurRadius: 10),
+          BoxShadow(color: planColor.withValues(alpha: 0.3), blurRadius: 10),
         ],
       ),
       child: Text(
@@ -273,16 +234,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy thông tin người dùng hiện tại từ Supabase
     final user = _supabase.auth.currentUser;
     final userName = user?.userMetadata?['full_name'] ?? 'Fan Bóng Đá';
     final userEmail = user?.email ?? 'Chưa cập nhật email';
     final avatarUrl = user?.userMetadata?['avatar_url'] ?? '';
-
-    // [MỚI THÊM] Lấy Tên và Logo đội bóng từ Metadata
     final favoriteTeam =
         user?.userMetadata?['favorite_team'] ?? 'Chưa chọn (Bấm để chọn)';
-    final favoriteTeamLogo = user?.userMetadata?['favorite_team_logo'] ?? '';
+    final favoriteTeamLogo =
+        user?.userMetadata?['favorite_team_logo'] ?? '';
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -299,15 +258,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // --- KHU VỰC 1: THÔNG TIN CÁ NHÂN ---
+            // Avatar
             const SizedBox(height: 20),
             Center(
               child: CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.grey[800],
-                backgroundImage: avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
-                    : null,
+                backgroundImage:
+                    avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                 child: avatarUrl.isEmpty
                     ? const Icon(Icons.person, size: 50, color: Colors.white54)
                     : null,
@@ -333,26 +291,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 30),
             const Divider(color: Colors.white24),
-            // ==========================================
-            // KHU VỰC VIP: NÂNG CẤP PREMIUM
-            // ==========================================
+
+            // Nâng cấp Premium
             const SizedBox(height: 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4.0),
               child: Container(
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [
-                      Color(0xFFFFD700),
-                      Color(0xFFF39C12),
-                    ], // Màu Vàng Gold
+                    colors: [Color(0xFFFFD700), Color(0xFFF39C12)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.orangeAccent.withOpacity(0.3),
+                      color: Colors.orangeAccent.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -397,33 +351,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   onTap: () async {
-                    // Chuyển sang màn hình Mua gói và đợi kết quả
-                    final bool? isPurchased = await Navigator.push(
+                    final bool? isPurchased = await Navigator.pushNamed(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const PremiumPlanScreen(),
-                      ),
-                    );
-
-                    // Nếu người dùng mua thành công, tải lại trang Profile để cập nhật dữ liệu
-                    if (isPurchased == true && mounted) {
-                      setState(() {});
-                    }
+                      '/premium',
+                    ) as bool?;
+                    if (isPurchased == true && mounted) setState(() {});
                   },
                 ),
               ),
             ),
             const SizedBox(height: 20),
             const Divider(color: Colors.white24),
-            // --- KHU VỰC 2: CÁ NHÂN HÓA ---
+
+            // Đội bóng yêu thích
             ListTile(
-              // [MỚI THÊM] Giao diện tự động đổi Khuyên thành Logo đội bóng
               leading: favoriteTeamLogo.isNotEmpty
                   ? Image.network(
                       favoriteTeamLogo,
                       width: 40,
                       height: 40,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.shield,
                         color: Colors.greenAccent,
                         size: 40,
@@ -439,25 +386,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: TextStyle(color: Colors.white),
               ),
               subtitle: Text(
-                favoriteTeam, // [MỚI THÊM] Hiện tên đội bóng
+                favoriteTeam,
                 style: const TextStyle(
                   color: Colors.greenAccent,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              trailing: const Icon(
-                Icons
-                    .edit, // [MỚI THÊM] Đổi icon mũi tên thành cây bút cho trực quan
-                color: Colors.white54,
-                size: 20,
-              ),
-              onTap: _showTeamSelection, // [MỚI THÊM] Gọi hàm mở bảng chọn
+              trailing: const Icon(Icons.edit, color: Colors.white54, size: 20),
+              onTap: _showTeamSelection,
             ),
             const Divider(color: Colors.white24),
+
+            // Lịch sử bình luận
             ListTile(
               leading: const SizedBox(
-                width:
-                    40, // Ép khung 40 để thẳng hàng thẳng lối với cái Logo ở trên
+                width: 40,
                 height: 40,
                 child: Icon(
                   Icons.comment_outlined,
@@ -478,24 +421,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: Colors.white54,
                 size: 16,
               ),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const CommentedNewsScreen(),
-                  ),
-                );
-              },
+              onTap: () => Navigator.pushNamed(context, '/commented-news'),
             ),
             const Divider(color: Colors.white24),
 
-            // --- KHU VỰC 3: HÀNH ĐỘNG ---
+            // Đăng xuất
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent.withOpacity(0.1),
+                  backgroundColor: Colors.redAccent.withValues(alpha: 0.1),
                   foregroundColor: Colors.redAccent,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(

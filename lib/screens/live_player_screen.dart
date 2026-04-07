@@ -79,7 +79,7 @@ class _LivePlayerScreenState extends State<LivePlayerScreen> {
           ), // Ảnh sân cỏ
           fit: BoxFit.cover,
           colorFilter: ColorFilter.mode(
-            Colors.black.withOpacity(0.8),
+            Colors.black.withValues(alpha: 0.8),
             BlendMode.darken,
           ),
         ),
@@ -128,8 +128,9 @@ class _LivePlayerScreenState extends State<LivePlayerScreen> {
                   builder: (context) => const PremiumPlanScreen(),
                 ),
               ).then((value) {
-                if (value == true)
+                if (value == true) {
                   _checkAccess(); // Kích hoạt mở khóa nếu mua thành công!
+                }
               });
             },
           ),

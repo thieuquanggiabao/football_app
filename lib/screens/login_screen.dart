@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart' as g_auth;
-import 'main_screen.dart'; // Nơi chứa thanh Bottom Navigation Bar của bạn
+import '../core/constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -18,8 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _googleSignIn() async {
     setState(() => _isLoading = true);
     final g_auth.GoogleSignIn api = g_auth.GoogleSignIn(
-      serverClientId:
-          '485933277797-j5bgvt32ia25gt8d9ucv6f173b8tc3lb.apps.googleusercontent.com',
+      serverClientId: AppConstants.googleServerClientId,
     );
     try {
       // 2. Mở bảng chọn tài khoản Google trên điện thoại
@@ -50,10 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('🎉 Đăng nhập thành công!')),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainScreen()),
-        );
+        Navigator.pushReplacementNamed(context, '/main');
       }
     } catch (error) {
       if (mounted) {

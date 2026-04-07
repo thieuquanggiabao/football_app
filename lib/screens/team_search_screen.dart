@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/supabase_client.dart'; // File chứa biến supabase của bạn
+import '../models/team_model.dart';
+import '../repositories/team_repository.dart';
 import 'team_detail_screen.dart';
 
 class TeamSearchScreen extends StatefulWidget {
@@ -10,51 +11,40 @@ class TeamSearchScreen extends StatefulWidget {
 }
 
 class _TeamSearchScreenState extends State<TeamSearchScreen> {
-  List<Map<String, dynamic>> allTeams = [];
-  List<Map<String, dynamic>> filteredTeams = [];
-  bool isLoading = true;
+  final _teamRepo = TeamRepository();
+
+  List<TeamModel> _allTeams = [];
+  List<TeamModel> _filteredTeams = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchTeamsFromSupabase();
+    _loadTeams();
   }
 
-  // Lấy danh sách đội bóng có sẵn trong bảng standings
-  Future<void> _fetchTeamsFromSupabase() async {
-    final response = await supabase
-        .from('standings')
-        .select('team_id, team_name, team_logo')
-        .order('team_name'); // Sắp xếp theo tên A-Z
-
-    // Lọc bỏ các đội bị trùng lặp (vì 1 đội có thể nằm ở nhiều dòng nếu lưu lịch sử)
-    final uniqueTeams = <int, Map<String, dynamic>>{};
-    for (var row in response) {
-      uniqueTeams[row['team_id']] = row;
+  Future<void> _loadTeams() async {
+    try {
+      final teams = await _teamRepo.getUniqueTeams();
+      setState(() {
+        _allTeams = teams;
+        _filteredTeams = teams;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Lỗi tải đội bóng: $e');
+      setState(() => _isLoading = false);
     }
-
-    setState(() {
-      allTeams = uniqueTeams.values.toList();
-      filteredTeams = allTeams;
-      isLoading = false;
-    });
   }
 
-  void _runFilter(String enteredKeyword) {
-    List<Map<String, dynamic>> results = [];
-    if (enteredKeyword.isEmpty) {
-      results = allTeams;
-    } else {
-      results = allTeams
-          .where(
-            (team) => team['team_name'].toLowerCase().contains(
-              enteredKeyword.toLowerCase(),
-            ),
-          )
-          .toList();
-    }
+  void _runFilter(String keyword) {
     setState(() {
-      filteredTeams = results;
+      _filteredTeams = keyword.isEmpty
+          ? _allTeams
+          : _allTeams
+              .where((team) =>
+                  team.teamName.toLowerCase().contains(keyword.toLowerCase()))
+              .toList();
     });
   }
 
@@ -65,7 +55,7 @@ class _TeamSearchScreenState extends State<TeamSearchScreen> {
       appBar: AppBar(
         backgroundColor: Colors.black,
         title: TextField(
-          onChanged: (value) => _runFilter(value),
+          onChanged: _runFilter,
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Nhập tên Câu lạc bộ...',
@@ -80,27 +70,26 @@ class _TeamSearchScreenState extends State<TeamSearchScreen> {
           ),
         ),
       ),
-      body: isLoading
+      body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Colors.greenAccent),
             )
           : ListView.builder(
-              itemCount: filteredTeams.length,
+              itemCount: _filteredTeams.length,
               itemBuilder: (context, index) {
-                final team = filteredTeams[index];
+                final team = _filteredTeams[index];
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 8,
                   ),
-                  // KỸ THUẬT HERO ANIMATION: Bọc Logo trong Hero widget với tag là ID đội bóng
                   leading: Hero(
-                    tag: 'team_logo_${team['team_id']}',
+                    tag: 'team_logo_${team.teamId}',
                     child: Image.network(
-                      team['team_logo'],
+                      team.teamLogo,
                       width: 50,
                       height: 50,
-                      errorBuilder: (c, e, s) => const Icon(
+                      errorBuilder: (_, _, _) => const Icon(
                         Icons.shield,
                         color: Colors.white,
                         size: 50,
@@ -108,7 +97,7 @@ class _TeamSearchScreenState extends State<TeamSearchScreen> {
                     ),
                   ),
                   title: Text(
-                    team['team_name'],
+                    team.teamName,
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -121,14 +110,13 @@ class _TeamSearchScreenState extends State<TeamSearchScreen> {
                     size: 16,
                   ),
                   onTap: () {
-                    // Chuyển sang màn hình chi tiết, mang theo ID, Tên và Logo
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => TeamDetailScreen(
-                          teamId: team['team_id'],
-                          teamName: team['team_name'],
-                          teamLogo: team['team_logo'],
+                          teamId: team.teamId,
+                          teamName: team.teamName,
+                          teamLogo: team.teamLogo,
                         ),
                       ),
                     );
