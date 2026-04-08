@@ -73,7 +73,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                       child: const Row(
                         children: [
                           SizedBox(
-                            width: 30,
+                            width: 25,
                             child: Text(
                               '#',
                               style: TextStyle(
@@ -92,7 +92,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                             ),
                           ),
                           SizedBox(
-                            width: 30,
+                            width: 25,
                             child: Text(
                               'Tr',
                               textAlign: TextAlign.center,
@@ -100,7 +100,31 @@ class _StandingsScreenState extends State<StandingsScreen> {
                             ),
                           ),
                           SizedBox(
-                            width: 40,
+                            width: 25,
+                            child: Text(
+                              'T',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 25,
+                            child: Text(
+                              'H',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 25,
+                            child: Text(
+                              'B',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 30,
                             child: Text(
                               'HS',
                               textAlign: TextAlign.center,
@@ -108,7 +132,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                             ),
                           ),
                           SizedBox(
-                            width: 35,
+                            width: 30,
                             child: Text(
                               'Pts',
                               textAlign: TextAlign.center,

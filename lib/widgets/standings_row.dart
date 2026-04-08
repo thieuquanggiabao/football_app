@@ -25,7 +25,7 @@ class StandingsRow extends StatelessWidget {
         children: [
           // Thứ hạng
           SizedBox(
-            width: 30,
+            width: 25,
             child: Text(
               '${team.position}',
               style: TextStyle(
@@ -67,7 +67,7 @@ class StandingsRow extends StatelessWidget {
 
           // Số trận
           SizedBox(
-            width: 30,
+            width: 25,
             child: Text(
               '${team.played}',
               textAlign: TextAlign.center,
@@ -75,9 +75,39 @@ class StandingsRow extends StatelessWidget {
             ),
           ),
 
+          // Thắng
+          SizedBox(
+            width: 25,
+            child: Text(
+              '${team.won}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+
+          // Hòa
+          SizedBox(
+            width: 25,
+            child: Text(
+              '${team.drawn}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+
+          // Thua
+          SizedBox(
+            width: 25,
+            child: Text(
+              '${team.lost}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ),
+
           // Hiệu số
           SizedBox(
-            width: 40,
+            width: 30,
             child: Text(
               '${team.goalDifference > 0 ? '+' : ''}${team.goalDifference}',
               textAlign: TextAlign.center,
@@ -87,7 +117,7 @@ class StandingsRow extends StatelessWidget {
 
           // Điểm
           SizedBox(
-            width: 35,
+            width: 30,
             child: Text(
               '${team.points}',
               textAlign: TextAlign.center,
