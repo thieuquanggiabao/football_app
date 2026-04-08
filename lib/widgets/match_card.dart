@@ -15,14 +15,16 @@ class MatchCard extends StatelessWidget {
     final timeString = DateFormat('HH:mm - dd/MM').format(localTime);
 
     final isLive = match.status == 'IN_PLAY' || match.status == 'PAUSED';
-    final statusColor = isLive ? Colors.greenAccent : Colors.grey;
+    final statusColor = isLive ? Theme.of(context).colorScheme.primary : Colors.grey;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
       shadowColor: Colors.black45,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      color: const Color(0xFF1E1E1E),
+      color: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF1E1E1E)
+          : Colors.grey.shade100,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () {
@@ -63,7 +65,10 @@ class MatchCard extends StatelessWidget {
                   // Dùng AppConstants thay vì hàm nội bộ
                   Text(
                     '${AppConstants.getLeagueName(match.leagueCode)} • $timeString',
-                    style: const TextStyle(color: Colors.white54, fontSize: 13),
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodySmall?.color,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -92,10 +97,10 @@ class MatchCard extends StatelessWidget {
                         Text(
                           match.homeTeam,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
+                          ) ?? const TextStyle(
                           ),
                         ),
                       ],
@@ -110,7 +115,9 @@ class MatchCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
-                        color: isLive ? Colors.greenAccent : Colors.white,
+                        color: isLive
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ),
@@ -123,9 +130,9 @@ class MatchCard extends StatelessWidget {
                           match.awayLogo,
                           height: 50,
                           width: 50,
-                          errorBuilder: (_, _, _) => const Icon(
+                          errorBuilder: (_, _, _) => Icon(
                             Icons.shield,
-                            color: Colors.white54,
+                            color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                             size: 50,
                           ),
                         ),
@@ -133,8 +140,10 @@ class MatchCard extends StatelessWidget {
                         Text(
                           match.awayTeam,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ) ?? const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),

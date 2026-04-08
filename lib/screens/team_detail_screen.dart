@@ -53,6 +53,7 @@ class _TeamDetailScreenState extends State<TeamDetailScreen> {
                 backgroundColor: Colors.grey[900],
                 iconTheme: const IconThemeData(color: Colors.white),
                 flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.parallax,
                   title: Text(
                     widget.teamName,
                     style: const TextStyle(

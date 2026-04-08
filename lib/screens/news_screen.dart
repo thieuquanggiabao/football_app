@@ -49,14 +49,16 @@ class _NewsScreenState extends State<NewsScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Colors.greenAccent),
+            child: CircularProgressIndicator(),
           );
         }
         if (snapshot.hasError) {
-          return const Center(
+          return Center(
             child: Text(
               '❌ Lỗi tải tin tức!',
-              style: TextStyle(color: Colors.redAccent),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           );
         }
@@ -64,7 +66,7 @@ class _NewsScreenState extends State<NewsScreen> {
           return Center(
             child: Text(
               emptyMessage,
-              style: const TextStyle(color: Colors.white54),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           );
         }
@@ -72,7 +74,7 @@ class _NewsScreenState extends State<NewsScreen> {
         final newsList = snapshot.data!;
 
         return RefreshIndicator(
-          color: Colors.greenAccent,
+          color: Theme.of(context).colorScheme.primary,
           onRefresh: () async => setState(() {}),
           child: ListView.builder(
             padding: const EdgeInsets.all(12),
@@ -98,14 +100,12 @@ class _NewsScreenState extends State<NewsScreen> {
             'Tin tức Bóng đá',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.greenAccent,
           centerTitle: true,
-          bottom: const TabBar(
-            indicatorColor: Colors.greenAccent,
-            labelColor: Colors.greenAccent,
-            unselectedLabelColor: Colors.white54,
-            tabs: [
+          bottom: TabBar(
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
+            tabs: const [
               Tab(icon: Icon(Icons.article), text: 'Mới nhất'),
               Tab(icon: Icon(Icons.shield), text: 'Đội của bạn'),
             ],
@@ -128,21 +128,17 @@ class _NewsScreenState extends State<NewsScreen> {
                         Icon(
                           Icons.shield_outlined,
                           size: 80,
-                          color: Colors.grey[800],
+                          color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           'Bạn chưa chọn đội bóng yêu thích!',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Hãy chọn ở mục Tài khoản nhé.',
-                          style: TextStyle(color: Colors.white54),
+                          style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
                     ),

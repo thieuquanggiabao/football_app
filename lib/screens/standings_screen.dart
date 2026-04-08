@@ -21,20 +21,17 @@ class _StandingsScreenState extends State<StandingsScreen> {
     return DefaultTabController(
       length: leagues.length,
       child: Scaffold(
-        backgroundColor: Colors.black,
         appBar: AppBar(
           title: const Text(
             'BẢNG XẾP HẠNG',
             style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5),
           ),
           centerTitle: true,
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.greenAccent,
           bottom: TabBar(
             isScrollable: true,
-            indicatorColor: Colors.greenAccent,
-            labelColor: Colors.greenAccent,
-            unselectedLabelColor: Colors.white54,
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color,
             tabs: leagues.map((l) => Tab(text: l['name'])).toList(),
           ),
         ),
@@ -45,16 +42,16 @@ class _StandingsScreenState extends State<StandingsScreen> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Colors.greenAccent),
+                    child: CircularProgressIndicator(),
                   );
                 }
                 if (snapshot.hasError ||
                     !snapshot.hasData ||
                     snapshot.data!.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       'Chưa có dữ liệu cho giải đấu này',
-                      style: TextStyle(color: Colors.white54),
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   );
                 }
@@ -69,15 +66,14 @@ class _StandingsScreenState extends State<StandingsScreen> {
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      color: Colors.grey[900],
-                      child: const Row(
+                      color: Theme.of(context).appBarTheme.backgroundColor,
+                      child: Row(
                         children: [
                           SizedBox(
                             width: 30,
                             child: Text(
                               '#',
-                              style: TextStyle(
-                                color: Colors.white54,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -85,8 +81,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                           Expanded(
                             child: Text(
                               'CÂU LẠC BỘ',
-                              style: TextStyle(
-                                color: Colors.white54,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -96,7 +91,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                             child: Text(
                               'Tr',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white54),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
                           SizedBox(
@@ -104,7 +99,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                             child: Text(
                               'HS',
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white54),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ),
                           SizedBox(
@@ -112,8 +107,8 @@ class _StandingsScreenState extends State<StandingsScreen> {
                             child: Text(
                               'Pts',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Colors.greenAccent,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),

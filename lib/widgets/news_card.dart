@@ -127,7 +127,6 @@ class _NewsCardState extends State<NewsCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -148,7 +147,6 @@ class _NewsCardState extends State<NewsCard> {
     final news = widget.news;
 
     return Card(
-      color: Colors.grey[900],
       margin: const EdgeInsets.only(bottom: 16),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -174,11 +172,11 @@ class _NewsCardState extends State<NewsCard> {
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Container(
                 height: 180,
-                color: Colors.grey[800],
-                child: const Icon(
+                color: Theme.of(context).appBarTheme.backgroundColor,
+                child: Icon(
                   Icons.image_not_supported,
                   size: 50,
-                  color: Colors.white54,
+                  color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                 ),
               ),
             ),
@@ -202,8 +200,10 @@ class _NewsCardState extends State<NewsCard> {
                   // Tiêu đề
                   Text(
                     news.title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ) ?? const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -211,7 +211,10 @@ class _NewsCardState extends State<NewsCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 10),
-                  const Divider(color: Colors.white24, height: 1),
+                  Divider(
+                    color: Theme.of(context).dividerColor,
+                    height: 1,
+                  ),
 
                   // Hàng nút tương tác
                   Row(
@@ -239,7 +242,8 @@ class _NewsCardState extends State<NewsCard> {
                             : Icons.thumb_up_outlined,
                         color: _myReaction == 'LIKE'
                             ? Colors.blueAccent
-                            : Colors.white54,
+                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                                Colors.grey,
                         count: _isLoading ? null : _likeCount,
                         onTap: () => _toggleReaction('LIKE'),
                       ),
@@ -253,7 +257,8 @@ class _NewsCardState extends State<NewsCard> {
                             : Icons.thumb_down_outlined,
                         color: _myReaction == 'DISLIKE'
                             ? Colors.redAccent
-                            : Colors.white54,
+                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                                Colors.grey,
                         count: _isLoading ? null : _dislikeCount,
                         onTap: () => _toggleReaction('DISLIKE'),
                       ),
@@ -262,9 +267,9 @@ class _NewsCardState extends State<NewsCard> {
 
                       // Chia sẻ
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.share,
-                          color: Colors.white54,
+                          color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                           size: 20,
                         ),
                         onPressed: () {
