@@ -29,12 +29,10 @@ class _MainScreenState extends State<MainScreen> {
     return Scaffold(
       body: _screens[_selectedIndex], // Hiển thị màn hình theo tab đang chọn
       bottomNavigationBar: BottomNavigationBar(
-        // LƯU Ý SỐNG CÒN: Phải có dòng này thì 4 Tab mới giữ được nền đen
         type: BottomNavigationBarType.fixed,
-
-        backgroundColor: Colors.black,
-        selectedItemColor: Colors.greenAccent,
-        unselectedItemColor: Colors.white54,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         currentIndex: _selectedIndex,
         onTap: (index) {
           setState(() {

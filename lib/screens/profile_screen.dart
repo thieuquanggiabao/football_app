@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
 import '../core/constants.dart';
+import '../core/theme_provider.dart';
 import '../models/team_model.dart';
 import '../repositories/team_repository.dart';
 
@@ -27,27 +29,28 @@ class _TeamSelectionSheetState extends State<TeamSelectionSheet> {
           child: Text(
             'Chọn đội bóng ruột của bạn',
             style: TextStyle(
-              color: Colors.white,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        const Divider(color: Colors.white24),
+        const Divider(),
         Expanded(
           child: FutureBuilder<List<TeamModel>>(
             future: _teamRepo.getUniqueTeams(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  child: CircularProgressIndicator(color: Colors.greenAccent),
+                  child: CircularProgressIndicator(),
                 );
               }
               if (snapshot.hasError) {
                 return Center(
                   child: Text(
                     'Lỗi tải dữ liệu: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.redAccent),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 );
               }
@@ -55,7 +58,6 @@ class _TeamSelectionSheetState extends State<TeamSelectionSheet> {
                 return const Center(
                   child: Text(
                     'Chưa có dữ liệu Bảng xếp hạng',
-                    style: TextStyle(color: Colors.white54),
                   ),
                 );
               }
@@ -75,16 +77,13 @@ class _TeamSelectionSheetState extends State<TeamSelectionSheet> {
                             height: 35,
                             errorBuilder: (_, _, _) => const Icon(
                               Icons.sports_soccer,
-                              color: Colors.greenAccent,
                             ),
                           )
                         : const Icon(
                             Icons.sports_soccer,
-                            color: Colors.greenAccent,
                           ),
                     title: Text(
                       team.teamName,
-                      style: const TextStyle(color: Colors.white),
                     ),
                     onTap: () {
                       Navigator.pop(context);
@@ -160,7 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showTeamSelection() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -170,19 +168,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildVipBadge(Map<String, dynamic>? subscription) {
+  Widget _buildVipBadge(Map<String, dynamic>? subscription, BuildContext context) {
     if (subscription == null ||
         subscription.isEmpty ||
         subscription['plan_code'] == null) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: Colors.grey[800],
+          color: Theme.of(context).appBarTheme.backgroundColor,
           borderRadius: BorderRadius.circular(20),
         ),
-        child: const Text(
+        child: Text(
           'Thành viên Tiêu chuẩn',
-          style: TextStyle(color: Colors.white70, fontSize: 12),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       );
     }
@@ -244,14 +242,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         user?.userMetadata?['favorite_team_logo'] ?? '';
 
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
           'Tài khoản',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.greenAccent,
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -263,34 +258,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Center(
               child: CircleAvatar(
                 radius: 50,
-                backgroundColor: Colors.grey[800],
+                backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
                 backgroundImage:
                     avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                 child: avatarUrl.isEmpty
-                    ? const Icon(Icons.person, size: 50, color: Colors.white54)
+                    ? Icon(
+                      Icons.person,
+                      size: 50,
+                      color: Theme.of(context).iconTheme.color,
+                    )
                     : null,
               ),
             ),
             const SizedBox(height: 16),
             Text(
               userName,
-              style: const TextStyle(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               userEmail,
-              style: const TextStyle(fontSize: 14, color: Colors.white54),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
             _buildVipBadge(
               user?.userMetadata?['subscription'] as Map<String, dynamic>?,
+              context,
             ),
             const SizedBox(height: 30),
-            const Divider(color: Colors.white24),
+            const Divider(),
 
             // Nâng cấp Premium
             const SizedBox(height: 10),
@@ -361,7 +359,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            const Divider(color: Colors.white24),
+            const Divider(),
 
             // Đội bóng yêu thích
             ListTile(
@@ -370,60 +368,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       favoriteTeamLogo,
                       width: 40,
                       height: 40,
-                      errorBuilder: (_, _, _) => const Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         Icons.shield,
-                        color: Colors.greenAccent,
                         size: 40,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.shield,
-                      color: Colors.greenAccent,
                       size: 40,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
-              title: const Text(
+              title: Text(
                 'Đội bóng yêu thích',
-                style: TextStyle(color: Colors.white),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
               subtitle: Text(
                 favoriteTeam,
-                style: const TextStyle(
-                  color: Colors.greenAccent,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              trailing: const Icon(Icons.edit, color: Colors.white54, size: 20),
+              trailing: Icon(
+                Icons.edit,
+                color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
+                size: 20,
+              ),
               onTap: _showTeamSelection,
             ),
-            const Divider(color: Colors.white24),
+            const Divider(),
 
             // Lịch sử bình luận
             ListTile(
-              leading: const SizedBox(
+              leading: SizedBox(
                 width: 40,
                 height: 40,
                 child: Icon(
                   Icons.comment_outlined,
-                  color: Colors.greenAccent,
+                  color: Theme.of(context).colorScheme.primary,
                   size: 28,
                 ),
               ),
-              title: const Text(
+              title: Text(
                 'Lịch sử bình luận',
-                style: TextStyle(color: Colors.white),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-              subtitle: const Text(
+              subtitle: Text(
                 'Xem các bài báo đã tương tác',
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              trailing: const Icon(
+              trailing: Icon(
                 Icons.arrow_forward_ios,
-                color: Colors.white54,
+                color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                 size: 16,
               ),
               onTap: () => Navigator.pushNamed(context, '/commented-news'),
             ),
-            const Divider(color: Colors.white24),
+            const Divider(),
+
+            // Theme Toggle (Dark/Light Mode)
+            const SizedBox(height: 10),
+            Consumer<ThemeProviderModel>(
+              builder: (context, themeProvider, _) {
+                return ListTile(
+                  leading: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                      color: Colors.amber,
+                      size: 28,
+                    ),
+                  ),
+                  title: Text(
+                    themeProvider.isDarkMode ? 'Chế độ tối' : 'Chế độ sáng',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  subtitle: Text(
+                    'Bật/Tắt chế độ tối',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  trailing: Switch(
+                    value: !themeProvider.isDarkMode,
+                    onChanged: (_) => themeProvider.toggleDarkMode(),
+                    activeColor: Colors.amber,
+                    inactiveThumbColor: Colors.grey,
+                  ),
+                );
+              },
+            ),
+            const Divider(),
 
             // Đăng xuất
             const SizedBox(height: 20),

@@ -7,7 +7,6 @@ import '../repositories/reaction_repository.dart';
 import 'comment_section.dart';
 import 'reaction_button.dart';
 
-/// Card tin tức với trạng thái Like/Dislike độc lập (Optimistic UI)
 class NewsCard extends StatefulWidget {
   final NewsModel news;
   final String Function(String) formatTime;
@@ -64,12 +63,10 @@ class _NewsCardState extends State<NewsCard> {
       return;
     }
 
-    // Snapshot trạng thái cũ để rollback nếu lỗi
     final prevReaction = _myReaction;
     final prevLike = _likeCount;
     final prevDislike = _dislikeCount;
 
-    // --- OPTIMISTIC UI ---
     setState(() {
       if (_myReaction == type) {
         _myReaction = null;
@@ -90,7 +87,6 @@ class _NewsCardState extends State<NewsCard> {
       }
     });
 
-    // --- DB operation ---
     try {
       if (prevReaction == type) {
         await _repo.deleteReaction(
@@ -106,7 +102,6 @@ class _NewsCardState extends State<NewsCard> {
       }
     } catch (e) {
       debugPrint('Lỗi toggle reaction: $e');
-      // --- ROLLBACK ---
       if (mounted) {
         setState(() {
           _myReaction = prevReaction;
@@ -127,7 +122,6 @@ class _NewsCardState extends State<NewsCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -148,7 +142,6 @@ class _NewsCardState extends State<NewsCard> {
     final news = widget.news;
 
     return Card(
-      color: Colors.grey[900],
       margin: const EdgeInsets.only(bottom: 16),
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -174,59 +167,74 @@ class _NewsCardState extends State<NewsCard> {
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Container(
                 height: 180,
-                color: Colors.grey[800],
-                child: const Icon(
+                color: Theme.of(context).appBarTheme.backgroundColor,
+                child: Icon(
                   Icons.image_not_supported,
                   size: 50,
-                  color: Colors.white54,
+                  color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                 ),
               ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Thời gian
-                  Text(
-                    widget.formatTime(news.publishedAt),
-                    style: TextStyle(
-                      color: Colors.greenAccent[400],
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Tiêu đề
-                  Text(
-                    news.title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                  const Divider(color: Colors.white24, height: 1),
-
-                  // Hàng nút tương tác
-                  Row(
-                    children: [
-                      // Bình luận
-                      TextButton.icon(
-                        onPressed: _showComments,
-                        icon: const Icon(
-                          Icons.comment,
-                          color: Colors.greenAccent,
-                          size: 20,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.greenAccent.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            widget.formatTime(news.publishedAt),
+                            style: const TextStyle(
+                              color: Colors.greenAccent,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                        label: const Text(
-                          'Bình luận',
-                          style: TextStyle(color: Colors.greenAccent),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      news.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        height: 1.3,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 16),
+                    const Divider(color: Colors.white10, height: 1),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        // Nút bình luận kiểu hiện đại
+                        InkWell(
+                          onTap: _showComments,
+                          child: Row(
+                            children: [
+                              const Icon(Icons.chat_bubble_outline, color: Colors.greenAccent, size: 20),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Bình luận',
+                                style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        ReactionButton(
+                          icon: _myReaction == 'LIKE' ? Icons.thumb_up : Icons.thumb_up_outlined,
+                          color: _myReaction == 'LIKE' ? Colors.blueAccent : Colors.grey,
+                          count: _isLoading ? null : _likeCount,
+                          onTap: () => _toggleReaction('LIKE'),
                         ),
                       ),
 
@@ -239,7 +247,8 @@ class _NewsCardState extends State<NewsCard> {
                             : Icons.thumb_up_outlined,
                         color: _myReaction == 'LIKE'
                             ? Colors.blueAccent
-                            : Colors.white54,
+                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                                Colors.grey,
                         count: _isLoading ? null : _likeCount,
                         onTap: () => _toggleReaction('LIKE'),
                       ),
@@ -253,7 +262,8 @@ class _NewsCardState extends State<NewsCard> {
                             : Icons.thumb_down_outlined,
                         color: _myReaction == 'DISLIKE'
                             ? Colors.redAccent
-                            : Colors.white54,
+                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                                Colors.grey,
                         count: _isLoading ? null : _dislikeCount,
                         onTap: () => _toggleReaction('DISLIKE'),
                       ),
@@ -262,25 +272,26 @@ class _NewsCardState extends State<NewsCard> {
 
                       // Chia sẻ
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.share,
-                          color: Colors.white54,
+                          color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                           size: 20,
                         ),
-                        onPressed: () {
-                          final shareText =
-                              '🔥 Đọc ngay tin nóng: ${news.title}\n\n👉 Chi tiết tại: ${news.articleUrl}';
-                           SharePlus.instance.share(
-                              ShareParams(text: shareText),
-                            );
-                        },
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.ios_share, color: Colors.white54, size: 20),
+                          onPressed: () {
+                            final shareText = '🔥 ${news.title}\n\n👉 Xem ngay: ${news.articleUrl}';
+                            SharePlus.instance.share(ShareParams(text: shareText));
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
