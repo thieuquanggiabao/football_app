@@ -57,6 +57,17 @@ class MyApp extends StatelessWidget {
           );
         },
       ),
+      // Cổng vào: kiểm tra phiên đăng nhập
+      // 123
+      home: isLoggedIn ? const MainScreen() : const LoginScreen(),
+      // Named routes — dùng bởi profile_screen và các màn hình khác
+      // LƯU Ý: Không được đặt '/' ở đây vì đã có home: ở trên
+      routes: {
+        '/login': (context) => const LoginScreen(),
+        '/main': (context) => const MainScreen(),
+        '/premium': (context) => const PremiumPlanScreen(),
+        '/commented-news': (context) => const CommentedNewsScreen(),
+      },
     );
   }
 }

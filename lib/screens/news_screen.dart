@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/news_model.dart';
 import '../repositories/news_repository.dart';
 import '../widgets/news_card.dart';
+import '../widgets/news_shimmer.dart'; // Thêm import shimmer
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
@@ -47,11 +48,13 @@ class _NewsScreenState extends State<NewsScreen> {
     return FutureBuilder<List<NewsModel>>(
       future: futureData,
       builder: (context, snapshot) {
+        // THAY ĐỔI: Sử dụng NewsShimmer thay cho vòng quay tròn nhàm chán
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(),
           );
         }
+
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -113,13 +116,10 @@ class _NewsScreenState extends State<NewsScreen> {
         ),
         body: TabBarView(
           children: [
-            // Tab 1: Tin mới nhất
             _buildNewsFeed(
               _newsRepo.getLatestNews(),
               'Chưa có tin tức nào.',
             ),
-
-            // Tab 2: Tin theo đội bóng yêu thích
             _favoriteTeam.isEmpty
                 ? Center(
                     child: Column(
