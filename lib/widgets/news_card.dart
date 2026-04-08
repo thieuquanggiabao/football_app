@@ -122,7 +122,6 @@ class _NewsCardState extends State<NewsCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.grey[900],
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -142,47 +141,37 @@ class _NewsCardState extends State<NewsCard> {
   Widget build(BuildContext context) {
     final news = widget.news;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Xám đậm hiện đại
-        borderRadius: BorderRadius.circular(20), // Bo góc sâu hơn
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)), // Viền mờ tinh tế
-        boxShadow: [
-          // Hiệu ứng đổ bóng 3D
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            offset: const Offset(0, 8),
-            blurRadius: 12,
-            spreadRadius: -4,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: InkWell(
-          onTap: () async {
-            final uri = Uri.parse(news.articleUrl);
-            if (await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.inAppWebView);
-            }
-          },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Hero Animation (Tag phải là duy nhất, ở đây dùng articleUrl)
-              Hero(
-                tag: news.articleUrl,
-                child: Image.network(
-                  news.imageUrl,
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    height: 200,
-                    color: Colors.grey[800],
-                    child: const Icon(Icons.image_not_supported, color: Colors.white24),
-                  ),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: InkWell(
+        onTap: () async {
+          final uri = Uri.parse(news.articleUrl);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.inAppWebView);
+          } else if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('❌ Không thể mở bài báo này!')),
+            );
+          }
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ảnh bìa
+            Image.network(
+              news.imageUrl,
+              height: 180,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Container(
+                height: 180,
+                color: Theme.of(context).appBarTheme.backgroundColor,
+                child: Icon(
+                  Icons.image_not_supported,
+                  size: 50,
+                  color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                 ),
               ),
               Padding(
@@ -247,12 +236,46 @@ class _NewsCardState extends State<NewsCard> {
                           count: _isLoading ? null : _likeCount,
                           onTap: () => _toggleReaction('LIKE'),
                         ),
-                        const SizedBox(width: 12),
-                        ReactionButton(
-                          icon: _myReaction == 'DISLIKE' ? Icons.thumb_down : Icons.thumb_down_outlined,
-                          color: _myReaction == 'DISLIKE' ? Colors.redAccent : Colors.grey,
-                          count: _isLoading ? null : _dislikeCount,
-                          onTap: () => _toggleReaction('DISLIKE'),
+                      ),
+
+                      const Spacer(),
+
+                      // Like
+                      ReactionButton(
+                        icon: _myReaction == 'LIKE'
+                            ? Icons.thumb_up
+                            : Icons.thumb_up_outlined,
+                        color: _myReaction == 'LIKE'
+                            ? Colors.blueAccent
+                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                                Colors.grey,
+                        count: _isLoading ? null : _likeCount,
+                        onTap: () => _toggleReaction('LIKE'),
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      // Dislike
+                      ReactionButton(
+                        icon: _myReaction == 'DISLIKE'
+                            ? Icons.thumb_down
+                            : Icons.thumb_down_outlined,
+                        color: _myReaction == 'DISLIKE'
+                            ? Colors.redAccent
+                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                                Colors.grey,
+                        count: _isLoading ? null : _dislikeCount,
+                        onTap: () => _toggleReaction('DISLIKE'),
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      // Chia sẻ
+                      IconButton(
+                        icon: Icon(
+                          Icons.share,
+                          color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
+                          size: 20,
                         ),
                         const SizedBox(width: 8),
                         IconButton(

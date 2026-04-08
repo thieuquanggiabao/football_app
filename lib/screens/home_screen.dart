@@ -12,15 +12,12 @@ class HomeScreen extends StatelessWidget {
     final matchRepository = MatchRepository();
 
     return Scaffold(
-      backgroundColor: Colors.black, // Nền đen sâu
       appBar: AppBar(
         title: const Text(
           'LIVE FOOTBALL',
           style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5),
         ),
         centerTitle: true,
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.greenAccent, // Chữ xanh dạ quang
         elevation: 0,
       ),
       body: Container(
@@ -29,7 +26,10 @@ class HomeScreen extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.greenAccent.withValues(alpha: 0.1), Colors.black],
+            colors: [
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              Theme.of(context).scaffoldBackgroundColor,
+            ],
             stops: const [0.0, 0.3],
           ),
         ),
@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
             // Trạng thái 1: Đang tải dữ liệu ban đầu
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
-                child: CircularProgressIndicator(color: Colors.greenAccent),
+                child: CircularProgressIndicator(),
               );
             }
 
@@ -48,17 +48,19 @@ class HomeScreen extends StatelessWidget {
               return Center(
                 child: Text(
                   'Lỗi kết nối: ${snapshot.error}',
-                  style: const TextStyle(color: Colors.redAccent),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
               );
             }
 
             // Trạng thái 3: Không có trận đấu nào
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Center(
+              return Center(
                 child: Text(
                   'Hôm nay không có trận đấu nào diễn ra ⚽',
-                  style: TextStyle(color: Colors.white54, fontSize: 16),
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               );
             }

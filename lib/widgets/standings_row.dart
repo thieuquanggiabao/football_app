@@ -15,10 +15,13 @@ class StandingsRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Colors.grey[850]!, width: 1),
+          bottom: BorderSide(
+            color: Theme.of(context).dividerColor,
+            width: 1,
+          ),
         ),
         color: isTop4
-            ? Colors.greenAccent.withValues(alpha: 0.05)
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)
             : Colors.transparent,
       ),
       child: Row(
@@ -29,7 +32,9 @@ class StandingsRow extends StatelessWidget {
             child: Text(
               '${team.position}',
               style: TextStyle(
-                color: isTop4 ? Colors.greenAccent : Colors.white,
+                color: isTop4
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).textTheme.bodyLarge?.color,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -44,9 +49,9 @@ class StandingsRow extends StatelessWidget {
                   team.teamLogo,
                   width: 24,
                   height: 24,
-                  errorBuilder: (_, _, _) => const Icon(
+                  errorBuilder: (_, _, _) => Icon(
                     Icons.shield,
-                    color: Colors.white54,
+                    color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                     size: 24,
                   ),
                 ),
@@ -54,8 +59,9 @@ class StandingsRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     team.teamName,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ) ?? const TextStyle(
                       fontWeight: FontWeight.w500,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -71,7 +77,7 @@ class StandingsRow extends StatelessWidget {
             child: Text(
               '${team.played}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
 
@@ -111,7 +117,7 @@ class StandingsRow extends StatelessWidget {
             child: Text(
               '${team.goalDifference > 0 ? '+' : ''}${team.goalDifference}',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white70),
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
 
@@ -121,8 +127,11 @@ class StandingsRow extends StatelessWidget {
             child: Text(
               '${team.points}',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.greenAccent,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ) ?? const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
