@@ -36,6 +36,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       // Cổng vào: kiểm tra phiên đăng nhập
+      // 123
       home: isLoggedIn ? const MainScreen() : const LoginScreen(),
       // Named routes — dùng bởi profile_screen và các màn hình khác
       // LƯU Ý: Không được đặt '/' ở đây vì đã có home: ở trên
