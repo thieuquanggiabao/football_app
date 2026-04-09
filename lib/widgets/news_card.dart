@@ -165,7 +165,7 @@ class _NewsCardState extends State<NewsCard> {
               height: 180,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
+              errorBuilder: (context, error, stack) => Container(
                 height: 180,
                 color: Theme.of(context).appBarTheme.backgroundColor,
                 child: Icon(
@@ -174,67 +174,72 @@ class _NewsCardState extends State<NewsCard> {
                   color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.greenAccent.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            widget.formatTime(news.publishedAt),
-                            style: const TextStyle(
-                              color: Colors.greenAccent,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
+            ),
+
+            // Nội dung card
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Thời gian đăng
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          widget.formatTime(news.publishedAt),
+                          style: const TextStyle(
+                            color: Colors.greenAccent,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      news.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        height: 1.3,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 16),
-                    const Divider(color: Colors.white10, height: 1),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        // Nút bình luận kiểu hiện đại
-                        InkWell(
-                          onTap: _showComments,
-                          child: Row(
-                            children: [
-                              const Icon(Icons.chat_bubble_outline, color: Colors.greenAccent, size: 20),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Bình luận',
-                                style: TextStyle(color: Colors.grey[400], fontSize: 13),
-                              ),
-                            ],
-                          ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Tiêu đề bài báo
+                  Text(
+                    news.title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          height: 1.3,
                         ),
-                        const Spacer(),
-                        ReactionButton(
-                          icon: _myReaction == 'LIKE' ? Icons.thumb_up : Icons.thumb_up_outlined,
-                          color: _myReaction == 'LIKE' ? Colors.blueAccent : Colors.grey,
-                          count: _isLoading ? null : _likeCount,
-                          onTap: () => _toggleReaction('LIKE'),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 16),
+                  const Divider(height: 1),
+                  const SizedBox(height: 8),
+
+                  // Thanh hành động
+                  Row(
+                    children: [
+                      // Nút bình luận
+                      InkWell(
+                        onTap: _showComments,
+                        child: Row(
+                          children: [
+                            const Icon(Icons.chat_bubble_outline,
+                                color: Colors.greenAccent, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Bình luận',
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.color,
+                                  fontSize: 13),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -247,7 +252,10 @@ class _NewsCardState extends State<NewsCard> {
                             : Icons.thumb_up_outlined,
                         color: _myReaction == 'LIKE'
                             ? Colors.blueAccent
-                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                            : Theme.of(context)
+                                    .iconTheme
+                                    .color
+                                    ?.withValues(alpha: 0.6) ??
                                 Colors.grey,
                         count: _isLoading ? null : _likeCount,
                         onTap: () => _toggleReaction('LIKE'),
@@ -262,7 +270,10 @@ class _NewsCardState extends State<NewsCard> {
                             : Icons.thumb_down_outlined,
                         color: _myReaction == 'DISLIKE'
                             ? Colors.redAccent
-                            : Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ??
+                            : Theme.of(context)
+                                    .iconTheme
+                                    .color
+                                    ?.withValues(alpha: 0.6) ??
                                 Colors.grey,
                         count: _isLoading ? null : _dislikeCount,
                         onTap: () => _toggleReaction('DISLIKE'),
@@ -273,25 +284,25 @@ class _NewsCardState extends State<NewsCard> {
                       // Chia sẻ
                       IconButton(
                         icon: Icon(
-                          Icons.share,
-                          color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
+                          Icons.ios_share,
+                          color: Theme.of(context)
+                              .iconTheme
+                              .color
+                              ?.withValues(alpha: 0.6),
                           size: 20,
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          icon: const Icon(Icons.ios_share, color: Colors.white54, size: 20),
-                          onPressed: () {
-                            final shareText = '🔥 ${news.title}\n\n👉 Xem ngay: ${news.articleUrl}';
-                            SharePlus.instance.share(ShareParams(text: shareText));
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                        onPressed: () {
+                          final shareText =
+                              '🔥 ${news.title}\n\n👉 Xem ngay: ${news.articleUrl}';
+                          SharePlus.instance.share(ShareParams(text: shareText));
+                        },
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

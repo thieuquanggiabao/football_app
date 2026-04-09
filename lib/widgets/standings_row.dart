@@ -49,7 +49,7 @@ class StandingsRow extends StatelessWidget {
                   team.teamLogo,
                   width: 24,
                   height: 24,
-                  errorBuilder: (_, _, _) => Icon(
+                  errorBuilder: (ctx, err, stack) => Icon(
                     Icons.shield,
                     color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                     size: 24,

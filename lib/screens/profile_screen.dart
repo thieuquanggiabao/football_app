@@ -75,7 +75,7 @@ class _TeamSelectionSheetState extends State<TeamSelectionSheet> {
                             team.teamLogo,
                             width: 35,
                             height: 35,
-                            errorBuilder: (_, _, _) => const Icon(
+                            errorBuilder: (ctx, err, stack) => const Icon(
                               Icons.sports_soccer,
                             ),
                           )
@@ -111,7 +111,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   final _supabase = Supabase.instance.client;
 
-  Future<void> _signOut() async {
+  Future<void> _doSignOut() async {
     try {
       final googleSignIn = GoogleSignIn(
         serverClientId: AppConstants.googleServerClientId,
@@ -126,6 +126,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       debugPrint('Lỗi đăng xuất: $e');
     }
+  }
+
+  void _showSignOutDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: Colors.redAccent),
+            SizedBox(width: 10),
+            Text('Xác nhận đăng xuất'),
+          ],
+        ),
+        content: const Text(
+          'Bạn có chắc muốn đăng xuất khỏi tài khoản không?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _doSignOut();
+            },
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _updateFavoriteTeam(TeamModel team) async {
@@ -368,7 +410,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       favoriteTeamLogo,
                       width: 40,
                       height: 40,
-                      errorBuilder: (_, _, _) => Icon(
+                      errorBuilder: (ctx, err, stack) => Icon(
                         Icons.shield,
                         size: 40,
                         color: Theme.of(context).colorScheme.primary,
@@ -479,7 +521,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   'Đăng xuất',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                onPressed: _signOut,
+                onPressed: () => _showSignOutDialog(),
               ),
             ),
           ],

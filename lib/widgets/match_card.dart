@@ -87,7 +87,7 @@ class MatchCard extends StatelessWidget {
                           match.homeLogo,
                           height: 50,
                           width: 50,
-                          errorBuilder: (_, _, _) => const Icon(
+                          errorBuilder: (ctx, err, stack) => const Icon(
                             Icons.shield,
                             color: Colors.white54,
                             size: 50,
@@ -130,7 +130,7 @@ class MatchCard extends StatelessWidget {
                           match.awayLogo,
                           height: 50,
                           width: 50,
-                          errorBuilder: (_, _, _) => Icon(
+                          errorBuilder: (ctx, err, stack) => Icon(
                             Icons.shield,
                             color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6),
                             size: 50,

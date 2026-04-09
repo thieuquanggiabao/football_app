@@ -89,7 +89,7 @@ class _TeamSearchScreenState extends State<TeamSearchScreen> {
                       team.teamLogo,
                       width: 50,
                       height: 50,
-                      errorBuilder: (_, _, _) => const Icon(
+                      errorBuilder: (ctx, err, stack) => const Icon(
                         Icons.shield,
                         color: Colors.white,
                         size: 50,

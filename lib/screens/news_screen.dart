@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/news_model.dart';
 import '../repositories/news_repository.dart';
 import '../widgets/news_card.dart';
-import '../widgets/news_shimmer.dart'; // Thêm import shimmer
 
 class NewsScreen extends StatefulWidget {
   const NewsScreen({super.key});
