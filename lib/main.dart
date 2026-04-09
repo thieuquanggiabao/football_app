@@ -4,6 +4,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:provider/provider.dart';
 import 'core/constants.dart';
 import 'core/theme_provider.dart';
+import 'core/notification_service.dart';
 import 'screens/main_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/premium_plan_screen.dart';
@@ -16,6 +17,8 @@ void main() async {
     url: AppConstants.supabaseUrl,
     anonKey: AppConstants.supabaseAnonKey,
   );
+
+  await NotificationService.init();
 
   timeago.setLocaleMessages('vi', timeago.ViMessages());
 

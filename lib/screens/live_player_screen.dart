@@ -50,15 +50,21 @@ class _LivePlayerScreenState extends State<LivePlayerScreen> {
       }
     }
 
-    // 2. Lấy mảng các giải đấu đã mua (Ví dụ: ['PL'] hoặc ['PL', 'PD', 'BL1', 'SA'])
+    // 2. Nếu là Super Pro → mở khóa TẤT CẢ giải đấu
+    final planCode = subscription['plan_code'];
+    if (planCode == 'SUPER_PRO') {
+      setState(() {
+        _hasAccess = true;
+        _isLoading = false;
+      });
+      return;
+    }
+
+    // 3. Các gói lẻ: kiểm tra giải đấu cụ thể
     final List<String> unlockedLeagues = List<String>.from(
       subscription['unlocked_leagues'] ?? [],
     );
-
-    // 3. SO SÁNH CHUẨN XÁC:
-    // Kiểm tra xem MÃ GIẢI ĐẤU của trận này có nằm trong danh sách Gói cước user đã mua không.
-    // (Lưu ý: match.leagueCode của bạn phải trả về 'PL', 'PD', 'BL1', 'SA' tương ứng)
-    bool access = unlockedLeagues.contains(widget.match.leagueCode);
+    final bool access = unlockedLeagues.contains(widget.match.leagueCode);
 
     setState(() {
       _hasAccess = access;
