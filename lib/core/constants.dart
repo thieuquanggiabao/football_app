@@ -8,6 +8,10 @@ class AppConstants {
   static const String supabaseAnonKey =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF6a2RqZ2Fwd2NwbmVjaWJsZWxyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2OTY4MDQsImV4cCI6MjA4OTI3MjgwNH0.QBbfsqaWoYQuKOM4QypI-qt_CeC148qQe3tFBZuPBb4';
 
+  // Cloudinary (Unsigned Upload — dùng cho upload ảnh bình luận)
+  static const String cloudinaryCloudName = 'deki67nrl';
+  static const String cloudinaryUploadPreset = 'football_comments';
+
   // Bản đồ mã giải đấu → tên tiếng Việt (dùng chung toàn app)
   static const Map<String, String> leagueNames = {
     'PL': 'Ngoại hạng Anh',

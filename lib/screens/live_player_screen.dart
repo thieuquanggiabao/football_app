@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/match_model.dart';
 import 'premium_plan_screen.dart'; // Import màn hình Bảng giá
+import '../services/profile_service.dart';
 
 class LivePlayerScreen extends StatefulWidget {
   final MatchModel match;
@@ -15,6 +16,7 @@ class LivePlayerScreen extends StatefulWidget {
 class _LivePlayerScreenState extends State<LivePlayerScreen> {
   bool _hasAccess = false;
   bool _isLoading = true;
+  final _profileService = ProfileService();
 
   @override
   void initState() {
@@ -22,54 +24,47 @@ class _LivePlayerScreenState extends State<LivePlayerScreen> {
     _checkAccess();
   }
 
-  // HÀM KIỂM TRA QUYỀN TRUY CẬP TỪ SUPABASE
-  // HÀM KIỂM TRA QUYỀN TRUY CẬP TỪ SUPABASE (BẢN CHUẨN)
-  void _checkAccess() {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
-      setState(() {
-        _hasAccess = false;
-        _isLoading = false;
-      });
-      return;
-    }
+  // HÀM KIỂM TRA QUYỀN TRUY CẬP TỪ BẢNG PROFILES THÔNG QUA PROFILE SERVICE
+  Future<void> _checkAccess() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-    final metadata = user.userMetadata ?? {};
-    final subscription = metadata['subscription'] ?? {};
-
-    // 1. Kiểm tra ngày hết hạn
-    final expireDateStr = subscription['expire_date'];
-    if (expireDateStr != null) {
-      final expireDate = DateTime.parse(expireDateStr);
-      if (DateTime.now().isAfter(expireDate)) {
+    final profile = await _profileService.getCurrentUserProfile();
+    if (profile == null) {
+      if (mounted) {
         setState(() {
           _hasAccess = false;
           _isLoading = false;
         });
+      }
+      return;
+    }
+
+    // 1. Kiểm tra ngày hết hạn
+    final expireDateStr = profile['expire_date'];
+    if (expireDateStr != null) {
+      final expireDate = DateTime.parse(expireDateStr);
+      if (DateTime.now().isAfter(expireDate)) {
+        if (mounted) {
+          setState(() {
+            _hasAccess = false;
+            _isLoading = false;
+          });
+        }
         return;
       }
     }
 
-    // 2. Nếu là Super Pro → mở khóa TẤT CẢ giải đấu
-    final planCode = subscription['plan_code'];
-    if (planCode == 'SUPER_PRO') {
+    // 2. Sử dụng helper canWatchMatch
+    final access = _profileService.canWatchMatch(widget.match.leagueCode, profile);
+
+    if (mounted) {
       setState(() {
-        _hasAccess = true;
+        _hasAccess = access;
         _isLoading = false;
       });
-      return;
     }
-
-    // 3. Các gói lẻ: kiểm tra giải đấu cụ thể
-    final List<String> unlockedLeagues = List<String>.from(
-      subscription['unlocked_leagues'] ?? [],
-    );
-    final bool access = unlockedLeagues.contains(widget.match.leagueCode);
-
-    setState(() {
-      _hasAccess = access;
-      _isLoading = false;
-    });
   }
 
   // GIAO DIỆN KHI BỊ KHÓA (CHƯA MUA GÓI)
