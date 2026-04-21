@@ -4,12 +4,25 @@ import '../models/standing_model.dart';
 /// Widget hiển thị một hàng đội bóng trong bảng xếp hạng
 class StandingsRow extends StatelessWidget {
   final StandingModel team;
+  final bool isChampionsLeague;
 
-  const StandingsRow({super.key, required this.team});
+  const StandingsRow({
+    super.key,
+    required this.team,
+    this.isChampionsLeague = false,
+  });
+
+  // Màu vàng đặc trưng Champions League
+  static const Color _clGold = Color(0xFFFAC917);
 
   @override
   Widget build(BuildContext context) {
     final isTop4 = team.position <= 4;
+    final isTop8 = team.position <= 8;
+    final highlightCondition = isChampionsLeague ? isTop8 : isTop4;
+    final highlightColor = isChampionsLeague
+        ? _clGold.withValues(alpha: team.position <= 8 ? 0.12 : 0)
+        : Theme.of(context).colorScheme.primary.withValues(alpha: isTop4 ? 0.05 : 0);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -20,9 +33,7 @@ class StandingsRow extends StatelessWidget {
             width: 1,
           ),
         ),
-        color: isTop4
-            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.05)
-            : Colors.transparent,
+        color: highlightCondition ? highlightColor : Colors.transparent,
       ),
       child: Row(
         children: [
@@ -32,9 +43,9 @@ class StandingsRow extends StatelessWidget {
             child: Text(
               '${team.position}',
               style: TextStyle(
-                color: isTop4
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).textTheme.bodyLarge?.color,
+                color: isChampionsLeague
+                    ? (team.position <= 8 ? _clGold : Theme.of(context).textTheme.bodyLarge?.color)
+                    : (isTop4 ? Theme.of(context).colorScheme.primary : Theme.of(context).textTheme.bodyLarge?.color),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -128,7 +139,7 @@ class StandingsRow extends StatelessWidget {
               '${team.points}',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+                color: isChampionsLeague ? _clGold : Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ) ?? const TextStyle(

@@ -37,5 +37,6 @@ class AppConstants {
     {'name': 'Bundesliga', 'code': 'BL1'},
     {'name': 'Serie A', 'code': 'SA'},
     {'name': 'Ligue 1', 'code': 'FL1'},
+    {'name': 'Champions League', 'code': 'CL'},
   ];
 }
